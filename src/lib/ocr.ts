@@ -110,11 +110,16 @@ export async function extractWithVision(
       }),
     });
 
-    if (!response.ok) return "";
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error("xAI vision OCR error:", response.status, errorBody);
+      return "";
+    }
 
     const data = await response.json();
     return data.choices?.[0]?.message?.content?.trim() ?? "";
-  } catch {
+  } catch (error) {
+    console.error("xAI vision OCR request failed:", error);
     return "";
   }
 }
@@ -126,18 +131,28 @@ export async function processFileOcr(
 ): Promise<string> {
   const base64 = buffer.toString("base64");
 
+  const hasXaiKey = !!process.env.XAI_API_KEY?.trim();
+
   // Try vision API first for images
   if (mimeType.startsWith("image/")) {
-    const visionText = await extractWithVision(base64, mimeType);
-    if (visionText) return visionText;
+    if (hasXaiKey) {
+      const visionText = await extractWithVision(base64, mimeType);
+      if (visionText) return visionText;
+      if (isVercelRuntime()) {
+        return "【Vision OCR 未返回结果，请检查 xAI 账户额度或稍后重试】";
+      }
+    }
     return extractImageText(buffer);
   }
 
   if (mimeType === "application/pdf") {
     const pdfText = await extractPdfText(buffer);
     if (pdfText) return pdfText;
-    const visionText = await extractWithVision(base64, mimeType);
-    return visionText || "【PDF 解析失败，未能提取文本】";
+    if (hasXaiKey) {
+      const visionText = await extractWithVision(base64, mimeType);
+      if (visionText) return visionText;
+    }
+    return "【PDF 解析失败，未能提取文本】";
   }
 
   return "";
