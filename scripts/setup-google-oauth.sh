@@ -25,7 +25,7 @@ for ENV in production preview development; do
   echo "✅ $ENV"
 done
 
-PROD_URL="${NEXTAUTH_URL:-https://noteflow-mu-three.vercel.app}"
+PROD_URL="${NEXTAUTH_URL:-https://noteflow-notes.vercel.app}"
 PROD_URL="${PROD_URL%/}"
 
 echo ""

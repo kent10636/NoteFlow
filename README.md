@@ -2,7 +2,7 @@
 
 智能个人知识笔记 — Markdown 编辑、双向链接、混合搜索、知识图谱、AI 辅助。
 
-**在线演示**：https://noteflow-mu-three.vercel.app
+**在线演示**：https://noteflow-notes.vercel.app
 
 ## 功能一览
 

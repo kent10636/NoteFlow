@@ -6,10 +6,16 @@ export function isGoogleAuthConfigured(): boolean {
   );
 }
 
-export const GOOGLE_OAUTH_CALLBACK =
-  "https://noteflow-mu-three.vercel.app/api/auth/callback/google";
+const DEFAULT_PRODUCTION_ORIGIN = "https://noteflow-notes.vercel.app";
+
+function getProductionOrigin(): string {
+  return process.env.NEXTAUTH_URL?.replace(/\/$/, "") || DEFAULT_PRODUCTION_ORIGIN;
+}
+
+/** Reference constants for Google Cloud Console OAuth setup */
+export const GOOGLE_OAUTH_CALLBACK = `${getProductionOrigin()}/api/auth/callback/google`;
 
 export const GOOGLE_OAUTH_ORIGINS = [
-  "https://noteflow-mu-three.vercel.app",
+  getProductionOrigin(),
   "http://localhost:3000",
 ] as const;
