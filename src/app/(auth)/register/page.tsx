@@ -17,6 +17,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
+import { OAuthDivider } from "@/components/auth/oauth-divider";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -113,6 +115,9 @@ export default function RegisterPage() {
               注册
             </Button>
           </form>
+
+          <OAuthDivider />
+          <GoogleSignInButton label="使用 Google 注册" />
         </CardContent>
         <CardFooter className="justify-center">
           <p className="text-sm text-muted-foreground">
