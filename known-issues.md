@@ -12,9 +12,9 @@
 ## 环境相关
 
 ### 1. pgvector 扩展
-- **状态**: 生产数据库尚未启用 pgvector
-- **影响**: 语义搜索使用文本关键词回退
-- **解决方案**: 在 Prisma 控制台执行 `CREATE EXTENSION IF NOT EXISTS vector;`
+- **状态**: ✅ 已启用（v0.8.1）
+- **说明**: 新建/更新笔记时自动生成向量嵌入
+- **维护**: `npm run db:pgvector`（通过 Vercel 生产环境执行）
 
 ### 2. Vercel 文件上传限制
 - **状态**: Serverless 函数文件系统只读

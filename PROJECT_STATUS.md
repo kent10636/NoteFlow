@@ -27,7 +27,7 @@
 | 用户认证（邮箱 + Google OAuth 骨架） | ✅ |
 | 笔记 CRUD + Markdown 编辑器 | ✅ |
 | AI 摘要 / 标签 / 推荐 | ✅（本地回退，待配置 XAI_API_KEY） |
-| 语义搜索 | ✅（文本回退，pgvector 待扩展） |
+| 语义搜索 | ✅（pgvector v0.8.1 已启用） |
 | 知识图谱 (React Flow) | ✅ |
 | 每日 AI 回顾 | ✅ |
 | 文件上传 + OCR | ✅（Vercel 需 Blob 存储） |
@@ -52,7 +52,7 @@
 - [ ] 配置 `XAI_API_KEY` 启用完整 Grok AI
 - [ ] 配置 Google OAuth
 - [ ] 接入 Vercel Blob 支持生产环境文件上传
-- [ ] 在生产数据库启用 pgvector 扩展
+- [x] 在生产数据库启用 pgvector 扩展（v0.8.1）
 - [ ] 连接 Vercel Git 自动部署（需在 Vercel 关联 GitHub）
 
 ## 管理入口
