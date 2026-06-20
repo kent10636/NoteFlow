@@ -10,7 +10,6 @@ import ReactFlow, {
   type Edge,
   useNodesState,
   useEdgesState,
-  MarkerType,
   Panel,
 } from "reactflow";
 import "reactflow/dist/style.css";
@@ -18,7 +17,13 @@ import { GitBranch, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  computeNodeHandlePositions,
+  isTagEdge,
+} from "@/lib/graph-layout";
 import type { GraphNode, GraphEdge } from "@/types";
+
+const GRAPH_CENTER = { x: 400, y: 350 };
 
 const TAG_COLORS = [
   "#6366f1", "#8b5cf6", "#ec4899", "#f59e0b",
@@ -43,11 +48,34 @@ export function KnowledgeGraph() {
       const count = graphNodes.length;
       const radius = Math.max(250, count * 35);
 
+      const nodePositions = new Map(
+        graphNodes.map((node, i) => {
+          const angle = (2 * Math.PI * i) / count - Math.PI / 2;
+          return [
+            node.id,
+            {
+              x: GRAPH_CENTER.x + radius * Math.cos(angle),
+              y: GRAPH_CENTER.y + radius * Math.sin(angle),
+            },
+          ] as const;
+        })
+      );
+
       const flowNodes: Node[] = graphNodes.map((node, i) => {
         const angle = (2 * Math.PI * i) / count - Math.PI / 2;
         const color = getTagColor(node.tags);
+        const position = nodePositions.get(node.id)!;
+        const handles = computeNodeHandlePositions(
+          node.id,
+          nodePositions,
+          graphEdges,
+          GRAPH_CENTER
+        );
+
         return {
           id: node.id,
+          sourcePosition: handles.sourcePosition,
+          targetPosition: handles.targetPosition,
           data: {
             tags: node.tags,
             label: (
@@ -71,10 +99,7 @@ export function KnowledgeGraph() {
               </div>
             ),
           },
-          position: {
-            x: 400 + radius * Math.cos(angle),
-            y: 350 + radius * Math.sin(angle),
-          },
+          position,
           style: {
             background: "var(--card, #fff)",
             border: `2px solid ${color}`,
@@ -88,25 +113,25 @@ export function KnowledgeGraph() {
         };
       });
 
-      const flowEdges: Edge[] = graphEdges.map((edge) => ({
-        id: edge.id,
-        source: edge.source,
-        target: edge.target,
-        animated: edge.strength > 0.6,
-        label: edge.strength > 0.8 ? "强关联" : undefined,
-        labelStyle: { fontSize: 10, fill: "#64748b" },
-        style: {
-          strokeWidth: Math.max(1.5, edge.strength * 4),
-          stroke: edge.id.startsWith("tag-") ? "#94a3b8" : "var(--primary, #6366f1)",
-          strokeDasharray: edge.id.startsWith("tag-") ? "5,5" : undefined,
-        },
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          width: 12,
-          height: 12,
-          color: edge.id.startsWith("tag-") ? "#94a3b8" : "var(--primary, #6366f1)",
-        },
-      }));
+      const flowEdges: Edge[] = graphEdges.map((edge) => {
+        const tagEdge = isTagEdge(edge.id);
+
+        return {
+          id: edge.id,
+          source: edge.source,
+          target: edge.target,
+          type: "default",
+          animated: !tagEdge && edge.strength > 0.6,
+          label: !tagEdge && edge.strength > 0.8 ? "强关联" : undefined,
+          labelStyle: { fontSize: 10, fill: "#64748b" },
+          style: {
+            strokeWidth: Math.max(1.5, edge.strength * 3),
+            stroke: tagEdge ? "#94a3b8" : "var(--primary, #6366f1)",
+            strokeDasharray: tagEdge ? "6,4" : undefined,
+            opacity: tagEdge ? 0.75 : 0.9,
+          },
+        };
+      });
 
       setNodes(flowNodes);
       setEdges(flowEdges);
@@ -143,7 +168,7 @@ export function KnowledgeGraph() {
   const legend = useMemo(
     () => (
       <div className="flex gap-2 text-xs">
-        <Badge variant="outline">实线 = AI 推荐关联</Badge>
+        <Badge variant="outline">实线 = 笔记关联</Badge>
         <Badge variant="secondary">虚线 = 标签关联</Badge>
       </div>
     ),
@@ -178,6 +203,8 @@ export function KnowledgeGraph() {
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
         fitView
+        fitViewOptions={{ padding: 0.2 }}
+        defaultEdgeOptions={{ type: "default" }}
         attributionPosition="bottom-left"
         minZoom={0.3}
         maxZoom={2}
