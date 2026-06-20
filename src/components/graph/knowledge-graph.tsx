@@ -17,13 +17,19 @@ import { GitBranch, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import GraphNoteNode from "@/components/graph/graph-note-node";
 import {
-  computeNodeHandlePositions,
   isTagEdge,
+  orderNodesOnCircle,
+  pickEdgeHandles,
 } from "@/lib/graph-layout";
 import type { GraphNode, GraphEdge } from "@/types";
 
 const GRAPH_CENTER = { x: 400, y: 350 };
+
+const nodeTypes = {
+  graphNote: GraphNoteNode,
+};
 
 const TAG_COLORS = [
   "#6366f1", "#8b5cf6", "#ec4899", "#f59e0b",
@@ -45,11 +51,12 @@ export function KnowledgeGraph() {
 
   const layoutNodes = useCallback(
     (graphNodes: GraphNode[], graphEdges: GraphEdge[]) => {
-      const count = graphNodes.length;
+      const orderedNodes = orderNodesOnCircle(graphNodes, graphEdges);
+      const count = orderedNodes.length;
       const radius = Math.max(250, count * 35);
 
       const nodePositions = new Map(
-        graphNodes.map((node, i) => {
+        orderedNodes.map((node, i) => {
           const angle = (2 * Math.PI * i) / count - Math.PI / 2;
           return [
             node.id,
@@ -61,23 +68,15 @@ export function KnowledgeGraph() {
         })
       );
 
-      const flowNodes: Node[] = graphNodes.map((node, i) => {
-        const angle = (2 * Math.PI * i) / count - Math.PI / 2;
+      const flowNodes: Node[] = orderedNodes.map((node) => {
         const color = getTagColor(node.tags);
         const position = nodePositions.get(node.id)!;
-        const handles = computeNodeHandlePositions(
-          node.id,
-          nodePositions,
-          graphEdges,
-          GRAPH_CENTER
-        );
 
         return {
           id: node.id,
-          sourcePosition: handles.sourcePosition,
-          targetPosition: handles.targetPosition,
+          type: "graphNote",
           data: {
-            tags: node.tags,
+            borderColor: color,
             label: (
               <div className="text-center">
                 <div className="max-w-[130px] truncate text-xs font-semibold">
@@ -100,27 +99,26 @@ export function KnowledgeGraph() {
             ),
           },
           position,
-          style: {
-            background: "var(--card, #fff)",
-            border: `2px solid ${color}`,
-            borderRadius: "12px",
-            padding: "10px 14px",
-            fontSize: "12px",
-            width: 150,
-            boxShadow: `0 2px 8px ${color}30`,
-            cursor: "pointer",
-          },
         };
       });
 
       const flowEdges: Edge[] = graphEdges.map((edge) => {
         const tagEdge = isTagEdge(edge.id);
+        const sourcePos = nodePositions.get(edge.source);
+        const targetPos = nodePositions.get(edge.target);
+        const handles =
+          sourcePos && targetPos
+            ? pickEdgeHandles(sourcePos, targetPos)
+            : { sourceHandle: "right-s", targetHandle: "left-t" };
 
         return {
           id: edge.id,
           source: edge.source,
           target: edge.target,
-          type: "default",
+          sourceHandle: handles.sourceHandle,
+          targetHandle: handles.targetHandle,
+          type: "smoothstep",
+          pathOptions: { borderRadius: 24, offset: 20 },
           animated: !tagEdge && edge.strength > 0.6,
           label: !tagEdge && edge.strength > 0.8 ? "强关联" : undefined,
           labelStyle: { fontSize: 10, fill: "#64748b" },
@@ -204,7 +202,8 @@ export function KnowledgeGraph() {
         onNodeClick={onNodeClick}
         fitView
         fitViewOptions={{ padding: 0.2 }}
-        defaultEdgeOptions={{ type: "default" }}
+        nodeTypes={nodeTypes}
+        defaultEdgeOptions={{ type: "smoothstep" }}
         attributionPosition="bottom-left"
         minZoom={0.3}
         maxZoom={2}
@@ -212,7 +211,9 @@ export function KnowledgeGraph() {
         <Background gap={20} size={1} />
         <Controls />
         <MiniMap
-          nodeColor={(n) => getTagColor((n.data as { tags?: string[] }).tags ?? [])}
+          nodeColor={(n) =>
+            (n.data as { borderColor?: string }).borderColor ?? "#64748b"
+          }
           maskColor="rgba(0,0,0,0.08)"
         />
         <Panel position="top-right" className="flex flex-col gap-2">
