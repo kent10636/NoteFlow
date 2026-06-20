@@ -5,6 +5,7 @@ import { useCallback, useState } from "react";
 import { Brain, Save, Sparkles, Tag, Trash2, Upload } from "lucide-react";
 import { NoteShareButton } from "@/components/notes/note-share-button";
 import { WikiLinkHint } from "@/components/notes/wiki-link-hint";
+import { useWikiLinkAutocomplete } from "@/components/notes/wiki-link-autocomplete";
 import { FileUploader } from "@/components/upload/file-uploader";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,13 @@ export function NoteEditor({
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState<string | null>(null);
   const [showUpload, setShowUpload] = useState(false);
+
+  const { textareaProps: wikiLinkTextareaProps, AutocompleteList } =
+    useWikiLinkAutocomplete({
+      content,
+      noteId,
+      onContentChange: setContent,
+    });
 
   const handleSave = useCallback(async () => {
     if (!title.trim()) {
@@ -203,11 +211,13 @@ export function NoteEditor({
       )}
 
       <WikiLinkHint />
+      {AutocompleteList}
 
       <div className="flex-1 overflow-auto p-4" data-color-mode="light">
         <MDEditor
           value={content}
           onChange={(val) => setContent(val ?? "")}
+          textareaProps={wikiLinkTextareaProps}
           height="100%"
           preview="live"
           className="!border-0 !shadow-none"
