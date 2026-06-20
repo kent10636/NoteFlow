@@ -10,6 +10,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:api": "vitest run __tests__/api",
+    "test:lib": "vitest run __tests__/lib",
     "test:integration": "vitest run __tests__/integration",
     "verify:local": "bash scripts/verify-local.sh",
     "check:env": "npx tsx scripts/check-env.ts",
