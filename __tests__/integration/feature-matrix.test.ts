@@ -9,20 +9,31 @@ import { join } from "path";
 const FEATURES = [
   {
     name: "认证 / Google OAuth",
-    libTests: ["__tests__/lib/google-auth.test.ts", "__tests__/lib/env.test.ts"],
-    apiTests: ["__tests__/api/register.test.ts", "__tests__/api/clip-token.test.ts"],
+    libTests: [
+      "__tests__/lib/google-auth.test.ts",
+      "__tests__/lib/env.test.ts",
+      "__tests__/lib/auth-config.test.ts",
+      "__tests__/lib/auth-credentials.test.ts",
+      "__tests__/lib/rate-limit-response.test.ts",
+    ],
+    apiTests: [
+      "__tests__/api/register.test.ts",
+      "__tests__/api/register-route.test.ts",
+      "__tests__/api/clip-token.test.ts",
+    ],
     sources: ["src/lib/auth.ts", "src/lib/google-auth.ts"],
   },
   {
     name: "笔记 CRUD / 导入导出",
     libTests: ["__tests__/lib/note-io.test.ts", "__tests__/lib/share.test.ts"],
-    apiTests: [],
+    apiTests: ["__tests__/api/notes-titles-route.test.ts"],
     sources: ["src/app/api/notes/route.ts", "src/app/api/notes/import/route.ts"],
   },
   {
     name: "双向链接 / 自动补全",
     libTests: [
       "__tests__/lib/wikilink.test.ts",
+      "__tests__/lib/wikilink-sync.test.ts",
       "__tests__/lib/wikilink-autocomplete.test.ts",
     ],
     apiTests: ["__tests__/api/backlinks.test.ts"],
@@ -32,6 +43,7 @@ const FEATURES = [
     name: "反向链接面板",
     libTests: ["__tests__/lib/backlinks.test.ts"],
     apiTests: ["__tests__/api/backlinks.test.ts"],
+    componentTests: ["__tests__/components/backlinks-panel.test.tsx"],
     sources: ["src/components/notes/backlinks-panel.tsx"],
   },
   {
@@ -67,34 +79,47 @@ const FEATURES = [
       "__tests__/lib/hybrid-search.test.ts",
       "__tests__/lib/embeddings.test.ts",
     ],
-    apiTests: [],
+    apiTests: ["__tests__/api/search-route.test.ts"],
     sources: ["src/lib/hybrid-search.ts", "src/app/api/search/route.ts"],
   },
   {
     name: "知识图谱",
     libTests: ["__tests__/lib/graph-layout.test.ts"],
-    apiTests: ["__tests__/api/graph.test.ts"],
+    apiTests: ["__tests__/api/graph.test.ts", "__tests__/api/graph-route.test.ts"],
     sources: ["src/components/graph/knowledge-graph.tsx"],
   },
   {
     name: "AI 功能",
     libTests: ["__tests__/lib/ai.test.ts", "__tests__/lib/daily-review.test.ts"],
-    apiTests: [],
+    apiTests: [
+      "__tests__/api/ai-summarize-route.test.ts",
+      "__tests__/api/ai-tags-route.test.ts",
+      "__tests__/api/ai-recommend-route.test.ts",
+      "__tests__/api/ai-daily-review-route.test.ts",
+    ],
     sources: ["src/lib/ai.ts", "src/lib/daily-review.ts"],
   },
   {
     name: "文件上传 / OCR",
-    libTests: ["__tests__/lib/upload-note.test.ts", "__tests__/lib/storage.test.ts"],
+    libTests: [
+      "__tests__/lib/upload-note.test.ts",
+      "__tests__/lib/storage.test.ts",
+      "__tests__/lib/ocr.test.ts",
+    ],
     apiTests: [],
     sources: ["src/app/api/upload/route.ts", "src/lib/upload-note.ts"],
   },
   {
     name: "Schema 自愈",
     libTests: ["__tests__/lib/ensure-schema.test.ts"],
-    apiTests: [],
+    apiTests: ["__tests__/api/health-route.test.ts"],
     sources: ["src/lib/ensure-schema.ts", "src/app/api/health/route.ts"],
   },
 ] as const;
+
+type FeatureEntry = (typeof FEATURES)[number] & {
+  componentTests?: readonly string[];
+};
 
 const ROOT = join(__dirname, "..", "..");
 
@@ -107,7 +132,12 @@ describe("Feature coverage matrix", () => {
     });
 
     it(`${feature.name} — test files exist`, () => {
-      const tests = [...feature.libTests, ...feature.apiTests];
+      const entry = feature as FeatureEntry;
+      const tests = [
+        ...feature.libTests,
+        ...feature.apiTests,
+        ...(entry.componentTests ?? []),
+      ];
       expect(tests.length).toBeGreaterThan(0);
       for (const file of tests) {
         expect(existsSync(join(ROOT, file)), `${file} missing`).toBe(true);

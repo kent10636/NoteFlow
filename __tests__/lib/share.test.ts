@@ -13,4 +13,13 @@ describe("buildShareUrl", () => {
       "https://app.example.com/share/abc"
     );
   });
+
+  it("falls back to NEXTAUTH_URL when baseUrl omitted", () => {
+    const original = process.env.NEXTAUTH_URL;
+    process.env.NEXTAUTH_URL = "https://noteflow.example.com/";
+    expect(buildShareUrl("note-1")).toBe(
+      "https://noteflow.example.com/share/note-1"
+    );
+    process.env.NEXTAUTH_URL = original;
+  });
 });

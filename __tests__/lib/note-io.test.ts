@@ -1,8 +1,10 @@
 import { describe, it, expect } from "vitest";
 import {
+  MAX_IMPORT_NOTES,
   NOTE_IO_VERSION,
   parseNotesFromJson,
   parseNotesFromMarkdown,
+  sanitizeImportPayloadSize,
   serializeNotesToJson,
   serializeNotesToMarkdown,
 } from "@/lib/note-io";
@@ -60,5 +62,32 @@ describe("note-io", () => {
     const parsed = parseNotesFromMarkdown("# 临时想法\n\n记录一下");
     expect(parsed).toHaveLength(1);
     expect(parsed[0].title).toBe("临时想法");
+  });
+
+  it("rejects import exceeding note count limit", () => {
+    const notes = Array.from({ length: MAX_IMPORT_NOTES + 1 }, (_, i) => ({
+      title: `笔记 ${i}`,
+      content: "",
+    }));
+    expect(() => parseNotesFromJson({ notes })).toThrow(
+      `单次最多导入 ${MAX_IMPORT_NOTES} 条笔记`
+    );
+  });
+
+  it("rejects empty markdown import", () => {
+    expect(() => parseNotesFromMarkdown("   ")).toThrow("Markdown 内容为空");
+  });
+
+  it("rejects malformed markdown frontmatter", () => {
+    expect(() =>
+      parseNotesFromMarkdown("---\ntitle: 无结束\n\n正文")
+    ).toThrow("缺少 frontmatter 结束标记");
+  });
+
+  it("enforces max import file size", () => {
+    expect(() => sanitizeImportPayloadSize(6 * 1024 * 1024)).toThrow(
+      "导入文件不能超过 5MB"
+    );
+    expect(() => sanitizeImportPayloadSize(1024)).not.toThrow();
   });
 });

@@ -52,5 +52,28 @@ describe("wikilink-autocomplete", () => {
   it("clamps selected index within options", () => {
     expect(clampSelectedIndex(3, 2)).toBe(1);
     expect(clampSelectedIndex(-1, 2)).toBe(0);
+    expect(clampSelectedIndex(0, 0)).toBe(0);
+  });
+
+  it("returns null for out-of-bounds cursor", () => {
+    expect(detectWikiLinkTrigger("[[a", -1)).toBeNull();
+    expect(detectWikiLinkTrigger("[[a", 100)).toBeNull();
+  });
+
+  it("shows all titles when query is empty", () => {
+    const many = Array.from({ length: 12 }, (_, i) => ({
+      id: `id-${i}`,
+      title: `笔记 ${i}`,
+    }));
+    const result = filterNoteTitles(many, "");
+    expect(result).toHaveLength(8);
+  });
+
+  it("limits suggestions to 8 items", () => {
+    const many = Array.from({ length: 20 }, (_, i) => ({
+      id: `id-${i}`,
+      title: `共同前缀 ${i}`,
+    }));
+    expect(filterNoteTitles(many, "共同")).toHaveLength(8);
   });
 });

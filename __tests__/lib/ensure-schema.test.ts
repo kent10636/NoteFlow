@@ -23,4 +23,15 @@ describe("ensureSchema", () => {
     expect(sql).toContain("clipToken");
     expect(sql).toContain("User_clipToken_key");
   });
+
+  it("runs only once when called concurrently", async () => {
+    vi.resetModules();
+    const { ensureSchema } = await import("@/lib/ensure-schema");
+    const execute = vi.mocked(prisma.$executeRawUnsafe);
+    execute.mockClear();
+
+    await Promise.all([ensureSchema(), ensureSchema(), ensureSchema()]);
+
+    expect(execute).toHaveBeenCalledTimes(2);
+  });
 });

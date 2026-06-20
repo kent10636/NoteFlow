@@ -35,9 +35,10 @@ npm run dev                # http://localhost:3000
 ## 常用命令
 
 ```bash
-npm test                   # 159 tests
+npm test                   # 238 tests
 npm run test:api           # API 路由测试
 npm run test:lib           # 工具库测试
+npm run test:components    # React 组件测试
 npm run test:integration   # 集成 & 功能矩阵
 npm run build
 npm run check:env
