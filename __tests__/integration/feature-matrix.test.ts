@@ -26,7 +26,11 @@ const FEATURES = [
   {
     name: "笔记 CRUD / 导入导出",
     libTests: ["__tests__/lib/note-io.test.ts", "__tests__/lib/share.test.ts"],
-    apiTests: ["__tests__/api/notes-titles-route.test.ts"],
+    apiTests: [
+      "__tests__/api/notes-route.test.ts",
+      "__tests__/api/notes-id-route.test.ts",
+      "__tests__/api/notes-titles-route.test.ts",
+    ],
     sources: ["src/app/api/notes/route.ts", "src/app/api/notes/import/route.ts"],
   },
   {
@@ -86,6 +90,7 @@ const FEATURES = [
     name: "知识图谱",
     libTests: ["__tests__/lib/graph-layout.test.ts"],
     apiTests: ["__tests__/api/graph.test.ts", "__tests__/api/graph-route.test.ts"],
+    componentTests: ["__tests__/components/knowledge-graph.test.tsx"],
     sources: ["src/components/graph/knowledge-graph.tsx"],
   },
   {
@@ -106,7 +111,7 @@ const FEATURES = [
       "__tests__/lib/storage.test.ts",
       "__tests__/lib/ocr.test.ts",
     ],
-    apiTests: [],
+    apiTests: ["__tests__/api/upload-route.test.ts"],
     sources: ["src/app/api/upload/route.ts", "src/lib/upload-note.ts"],
   },
   {
