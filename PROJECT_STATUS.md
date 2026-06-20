@@ -53,7 +53,7 @@
 - [ ] 配置 Google OAuth
 - [ ] 接入 Vercel Blob 支持生产环境文件上传
 - [x] 在生产数据库启用 pgvector 扩展（v0.8.1）
-- [ ] 连接 Vercel Git 自动部署（需在 Vercel 关联 GitHub）
+- [x] 连接 Vercel Git 自动部署（kent10636/NoteFlow → main 分支）
 
 ## 管理入口
 
