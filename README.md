@@ -1,94 +1,77 @@
-# NoteFlow — 智能个人知识笔记 SaaS
+# NoteFlow
 
-AI 驱动的智能笔记管理平台，支持 Markdown 编辑、语义搜索、知识图谱、每日回顾和 OCR 文件上传。
+智能个人知识笔记，支持 Markdown 编辑、混合搜索、知识图谱与 AI 辅助。
 
-## 项目状态：已上线
+**生产站点**：https://noteflow-mu-three.vercel.app
 
-| 环境 | 链接 | 状态 |
-|------|------|------|
-| **生产站点** | [noteflow-mu-three.vercel.app](https://noteflow-mu-three.vercel.app) | ✅ 运行中 |
-| **健康检查** | [/api/health](https://noteflow-mu-three.vercel.app/api/health) | ✅ healthy |
-| **GitHub** | [github.com/kent10636/NoteFlow](https://github.com/kent10636/NoteFlow) | ✅ Git 自动部署 |
-| **数据库** | Prisma Postgres + pgvector | ✅ 已 Claim 保留 |
-| **文件存储** | Vercel Blob | ✅ 生产上传已验证 |
-| 本地开发 | [localhost:3000](http://localhost:3000) | ✅ |
+## 功能
 
-> 完整状态见 [PROJECT_STATUS.md](./PROJECT_STATUS.md)
+| 模块 | 说明 |
+|------|------|
+| 认证 | 邮箱密码 + Google OAuth |
+| 笔记 | CRUD、Markdown 编辑器、双向链接 `[[笔记名]]` |
+| 导入导出 | JSON 备份 / Markdown 合集 |
+| 公开分享 | `/share/[id]` 只读链接 |
+| 搜索 | 关键词 + 语义混合搜索（pgvector） |
+| 知识图谱 | React Flow，笔记关联与标签聚类 |
+| 上传 | PDF/图片 → Vercel Blob，可选自动建笔记 + OCR |
+| AI | 摘要 / 标签 / 推荐 / 每日回顾（Grok，需 xAI 额度） |
 
-## 功能特性
-
-- **用户认证** — 邮箱密码 + Google OAuth（可选）
-- **笔记管理** — CRUD + Markdown 实时预览
-- **AI 智能助手** — 摘要 / 标签 / 相关推荐（Grok API，Key 已配置待充值）
-- **语义搜索** — 向量搜索 + 文本回退
-- **知识图谱** — React Flow 可视化，标签关联
-- **每日 AI 回顾** — 自动生成当日学习总结
-- **文件上传 + OCR** — PDF/图片 → 自动提取文字
-- **首次启动引导** — 仪表盘 5 步 onboarding
-
-## 本地开发
+## 快速开始
 
 ```bash
 npm install
 cp .env.example .env
 npx prisma dev -d          # 或 docker compose up -d
 npx prisma db push
-npm run dev                # → http://localhost:3000
+npm run dev                # http://localhost:3000
 ```
 
-## 测试
+## 常用命令
 
 ```bash
-npm test                   # 35 tests, 100% 通过
-npm run deploy:check       # 部署前检查
-npm run check:env          # 环境变量验证
+npm test                   # 84 tests
+npm run build
+npm run check:env
+npm run deploy:check
+npm run verify:google      # 验证 Google OAuth
 ```
 
-## 部署架构
+## 部署
+
+```bash
+git push origin main       # Vercel 自动部署
+```
+
+环境变量模板：`.env.production.example`（仅占位符）
+
+完整运维说明：[docs/DEPLOY.md](./docs/DEPLOY.md)
+
+## API 概览
+
+| 路径 | 说明 |
+|------|------|
+| `GET /api/health` | 健康检查 |
+| `GET/POST /api/notes` | 笔记 CRUD |
+| `GET /api/notes/export` | 导出 JSON / Markdown |
+| `POST /api/notes/import` | 导入 |
+| `POST /api/search` | 混合搜索 |
+| `GET /api/graph` | 知识图谱数据 |
+| `POST /api/upload` | 文件上传 |
+| `GET /share/[id]` | 公开笔记页 |
+
+## 架构
 
 ```
-用户 → Vercel (Next.js) → Prisma Postgres (pgvector)
+用户 → Vercel (Next.js 16) → Prisma Postgres (pgvector)
               ↓
         Vercel Blob + xAI Grok API
 ```
 
-### 重新部署
+## 已知限制
 
-```bash
-git push origin main       # 推荐：Git 自动部署
-# 或
-npx vercel deploy --prod --yes
-```
-
-环境变量模板：[.env.production.example](./.env.production.example)（仅含占位符，无真实密钥）
-
-完整指南：[docs/DEPLOY.md](./docs/DEPLOY.md) | 部署报告：[DEPLOYMENT_REPORT.md](./DEPLOYMENT_REPORT.md)
-
-## API 端点
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/health` | 健康检查（公开） |
-| GET | `/api/setup/status` | 引导状态 |
-| POST | `/api/register` | 注册 |
-| GET/POST | `/api/notes` | 笔记 CRUD |
-| POST | `/api/ai/summarize` | AI 摘要 |
-| POST | `/api/ai/daily-review` | 每日回顾 |
-| POST | `/api/search` | 语义搜索 |
-| GET | `/api/graph` | 知识图谱 |
-| POST | `/api/upload` | 文件上传 + OCR |
-
-## 已知问题
-
-详见 [known-issues.md](./known-issues.md)
-
-## 未来可扩展
-
-- [ ] Vercel Blob 云存储
-- [ ] 协作编辑 / 版本历史
-- [ ] 导出 PDF / Notion / Obsidian
-- [ ] 移动端 PWA
-- [ ] pgvector 语义搜索增强
+- xAI Key 已配置，账户额度不足时 AI/OCR 使用本地回退
+- 详见 [known-issues.md](./known-issues.md)
 
 ## License
 

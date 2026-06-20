@@ -1,217 +1,85 @@
-# NoteFlow 部署指南
+# 部署与运维
 
-## 当前生产环境
+## 生产环境
 
-| 组件 | 状态 | 地址 |
-|------|------|------|
-| Vercel 前端 | ✅ 已上线 | https://noteflow-mu-three.vercel.app |
-| Prisma Postgres | ✅ 已 Claim | 托管于 Prisma Data Platform |
-| Vercel Blob | ✅ 已接入 | `noteflow-uploads`（sin1） |
-| Vercel Git | ✅ 已连接 | push `main` 自动部署 |
-| GitHub | ✅ 已同步 | https://github.com/kent10636/NoteFlow |
+| 组件 | 地址 |
+|------|------|
+| 站点 | https://noteflow-mu-three.vercel.app |
+| GitHub | https://github.com/kent10636/NoteFlow |
+| Vercel | https://vercel.com/kentshi/noteflow |
+| 健康检查 | `/api/health` |
 
-> 环境变量和数据库连接字符串**仅存储在 Vercel Dashboard**，不写入代码仓库。
-
----
-
-## 架构
-
-```
-用户 → Vercel (Next.js) → Prisma Postgres
-              ↓                    ↓
-        Vercel Blob          pgvector 语义搜索
-              ↓
-        xAI Grok API（Key 已配置，额度待充值）
-```
+推送 `main` 分支即自动部署。重连 Git：`npm run vercel:git-connect`
 
 ---
 
-## 推送代码到 GitHub
+## 环境变量
 
-```bash
-git push origin main
-```
-
-推荐使用 SSH（已配置）：
-
-```bash
-git remote set-url origin git@github.com:kent10636/NoteFlow.git
-git push origin main
-```
-
----
-
-## 数据库选项
-
-### 方案 A — Prisma Postgres（当前生产环境）
-
-```bash
-npx create-db create
-# 按提示 Claim 数据库以永久保留
-npx prisma db push
-```
-
-将连接字符串配置到 Vercel 环境变量 `DATABASE_URL`（**不要提交到 Git**）。
-
-### 方案 B — Railway
-
-```bash
-npm i -g @railway/cli
-railway login && railway init
-railway add --database postgres
-railway variables
-```
-
-启用 pgvector：
-
-```sql
-CREATE EXTENSION IF NOT EXISTS vector;
-```
-
----
-
-## Vercel 部署
-
-### Git 自动部署（推荐，已启用）
-
-```bash
-git push origin main          # 生产环境
-git push origin feature/xxx   # Preview 环境
-```
-
-仓库已连接：`kent10636/NoteFlow` → 项目 `noteflow`，生产分支 `main`。
-
-重连命令：`npm run vercel:git-connect`
-
-### CLI 手动部署（备用）
-
-```bash
-npx vercel login
-npx vercel link --project noteflow
-npx vercel deploy --prod --yes
-```
-
-### Vercel Blob（文件上传）
-
-```bash
-npx vercel blob create-store noteflow-uploads --access public --region sin1 --yes \
-  --environment production --environment preview --environment development
-```
-
-创建后会自动注入 `BLOB_READ_WRITE_TOKEN`。本地开发可 `vercel env pull` 拉取。
-
-### 环境变量
-
-在 [Vercel 环境变量设置](https://vercel.com/kentshi/noteflow/settings/environment-variables) 配置：
+在 [Vercel 环境变量](https://vercel.com/kentshi/noteflow/settings/environment-variables) 配置，**勿提交到 Git**：
 
 | 变量 | 必填 | 说明 |
 |------|------|------|
-| `DATABASE_URL` | ✅ | 数据库连接字符串 |
+| `DATABASE_URL` | ✅ | Prisma Postgres 连接串 |
 | `AUTH_SECRET` | ✅ | `openssl rand -base64 32` |
 | `NEXTAUTH_SECRET` | ✅ | 同上 |
 | `NEXTAUTH_URL` | ✅ | `https://noteflow-mu-three.vercel.app` |
-| `BLOB_READ_WRITE_TOKEN` | ✅* | Vercel Blob 自动注入（文件上传） |
-| `XAI_API_KEY` | ❌ | Grok AI；已配置，需 xAI 账户额度 |
+| `BLOB_READ_WRITE_TOKEN` | ✅ | Blob 存储（`vercel blob create-store` 自动注入） |
+| `GOOGLE_CLIENT_ID` | ❌ | Google 登录 |
+| `GOOGLE_CLIENT_SECRET` | ❌ | Google 登录 |
+| `XAI_API_KEY` | ❌ | Grok AI / Vision OCR |
 
-\* 通过 `vercel blob create-store` 创建存储时自动配置。
-
-同步 XAI Key：
+维护脚本：
 
 ```bash
-npm run setup:xai -- <your-xai-api-key>
-git commit --allow-empty -m "chore: redeploy" && git push   # 触发重新部署
+npm run setup:xai -- <key>
+npm run setup:google -- <client-id> <client-secret>
+npm run verify:google
 ```
-
-模板文件：[.env.production.example](../.env.production.example)（仅含占位符）
 
 ---
 
-## 部署验证
+## Google OAuth
+
+在 [Google Cloud Console](https://console.cloud.google.com/apis/credentials) 创建 **Web application** 客户端：
+
+```
+Origins:  https://noteflow-mu-three.vercel.app  http://localhost:3000
+Redirect: https://noteflow-mu-three.vercel.app/api/auth/callback/google
+          http://localhost:3000/api/auth/callback/google
+```
+
+Testing 模式需将 Gmail 加入 Test users。配置后运行 `npm run verify:google`。
+
+---
+
+## 数据库
+
+生产库使用 Prisma Postgres + pgvector：
+
+```bash
+npm run db:pgvector    # 启用 pgvector
+npm run db:backfill    # 补全嵌入向量
+npm run db:stats       # 库统计
+```
+
+---
+
+## 验证
 
 ```bash
 npm run deploy:check
 curl https://noteflow-mu-three.vercel.app/api/health
-```
-
-预期响应：
-
-```json
-{
-  "status": "healthy",
-  "checks": { "env": true, "database": true }
-}
-```
-
----
-
-## Google 登录（OAuth）
-
-### 1. 配置 Google Cloud Console
-
-在 [Credentials](https://console.cloud.google.com/apis/credentials) 创建 **Web application** OAuth 客户端，填入：
-
-**Authorized JavaScript origins:**
-```
-https://noteflow-mu-three.vercel.app
-http://localhost:3000
-```
-
-**Authorized redirect URIs:**
-```
-https://noteflow-mu-three.vercel.app/api/auth/callback/google
-http://localhost:3000/api/auth/callback/google
-```
-
-在 [OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent)：
-- 应用状态为 **Testing** 时，将你的 Gmail 加入 **Test users**
-- **Authorized domains** 添加 `vercel.app`
-
-### 2. 同步凭据到 Vercel
-
-```bash
-npm run setup:google -- <client-id> <client-secret>
-git commit --allow-empty -m "chore: redeploy after Google OAuth" && git push
-```
-
-### 3. 验证
-
-```bash
-npm run verify:google
+npm test
 ```
 
 ---
 
 ## 常见问题
 
-### Google 登录提示「禁止访问：此应用的请求无效」
-
-这是 Google 的 `redirect_uri_mismatch` 错误，表示回调地址未在 Google Cloud Console 注册。
-
-运行 `npm run verify:google` 查看需要填写的精确 URI。常见原因：
-- redirect URI 拼写错误或多了尾部斜杠
-- OAuth 客户端类型不是 Web application
-- Testing 模式下当前 Gmail 未加入 Test users
-
-### 登录后报错（NextAuth）
-- 确认 `NEXTAUTH_URL` 与 Vercel 域名一致
-- 确认 `AUTH_SECRET` 已配置
-
-### 构建失败
-- 确保 Vercel 已配置 `DATABASE_URL`
-- `postinstall` 会自动运行 `prisma generate`
-
-### 语义搜索精度低
-- pgvector 已在生产库启用（`npm run db:pgvector`）
-- 配置并充值 `XAI_API_KEY` 提升 embedding 质量
-
-### 文件上传失败（Vercel）
-- 确认 `BLOB_READ_WRITE_TOKEN` 已配置（Vercel → Storage → Blob）
-- 本地开发无需 Blob，使用 `public/uploads/`
-
-### AI / OCR 返回本地回退内容
-- 确认 `XAI_API_KEY` 已在 Vercel 配置
-- 在 https://console.x.ai/ 检查账户额度是否充足
-
-### 安全提醒
-- **永远不要**将 `.env`、连接字符串、API 密钥提交到 Git
-- 使用 `.vercelignore` 防止本地环境文件上传
+| 问题 | 处理 |
+|------|------|
+| Google 登录「请求无效」 | 运行 `npm run verify:google`，检查 redirect URI |
+| 登录后 NextAuth 报错 | 确认 `NEXTAUTH_URL`、`AUTH_SECRET` |
+| 上传失败 | 检查 `BLOB_READ_WRITE_TOKEN` |
+| AI 返回本地回退 | xAI 账户充值 |
+| 构建失败 | 确认 Vercel 已配 `DATABASE_URL` |
