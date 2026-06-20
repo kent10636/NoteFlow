@@ -1,10 +1,21 @@
+# NoteFlow — Railway PostgreSQL 配置
+# 此文件用于 Railway 数据库服务（非 Vercel 前端）
+#
+# 推荐架构:
+#   Vercel (Next.js 前端) + Railway (PostgreSQL + pgvector)
+#
+# 快速开始:
+#   railway login
+#   railway init
+#   railway add --database postgres
+#   railway variables  # 获取 DATABASE_URL
+
 [build]
-builder = "nixpacks"
-buildCommand = "npm install && npx prisma generate"
+builder = "NIXPACKS"
+
+# 仅当在 Railway 部署完整应用时使用以下配置
+# 推荐将 Next.js 部署到 Vercel，Railway 仅托管数据库
 
 [deploy]
-startCommand = "npx prisma db push && npm start"
-healthcheckPath = "/"
-healthcheckTimeout = 300
-restartPolicyType = "on_failure"
+restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3

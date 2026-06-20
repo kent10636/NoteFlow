@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "@/lib/date";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +15,7 @@ interface NoteCardProps {
   updatedAt: string | Date;
 }
 
-export function NoteCard({
+export const NoteCard = memo(function NoteCard({
   id,
   title,
   summary,
@@ -57,4 +58,4 @@ export function NoteCard({
       </Card>
     </Link>
   );
-}
+});

@@ -11,7 +11,11 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
   const isLoggedIn = !!req.auth;
 
-  if (pathname.startsWith("/api/auth") || pathname === "/api/register") {
+  if (
+    pathname.startsWith("/api/auth") ||
+    pathname === "/api/register" ||
+    pathname === "/api/health"
+  ) {
     return NextResponse.next();
   }
 

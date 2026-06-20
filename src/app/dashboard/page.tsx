@@ -5,6 +5,7 @@ import { BookOpen, GitBranch, PenLine, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NoteCard } from "@/components/notes/note-card";
+import { SetupGuide } from "@/components/onboarding/setup-guide";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -37,6 +38,8 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-8">
+      <SetupGuide />
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold">
           你好，{session?.user?.name ?? "用户"} 👋

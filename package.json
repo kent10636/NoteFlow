@@ -11,6 +11,8 @@
     "test:watch": "vitest",
     "test:integration": "vitest run __tests__/integration",
     "verify:local": "bash scripts/verify-local.sh",
+    "check:env": "npx tsx scripts/check-env.ts",
+    "deploy:check": "bash scripts/deploy-checklist.sh",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
