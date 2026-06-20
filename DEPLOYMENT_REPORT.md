@@ -17,8 +17,8 @@
 | 生产构建 | ✅ 通过 | `npm run build` |
 | Vercel 配置 | ✅ 就绪 | `vercel.json` + `.env.production.example` |
 | Railway 配置 | ✅ 就绪 | `railway.toml` + 文档 |
-| Vercel 线上 | ⏳ 待部署 | 需用户执行下方 3 条命令 |
-| Railway DB | ⏳ 待部署 | 需用户执行下方命令 |
+| Vercel 线上 | ✅ 已部署 | https://noteflow-mu-three.vercel.app |
+| 数据库 | ✅ Prisma Postgres | 需在 24h 内 Claim（见下方） |
 
 ---
 
