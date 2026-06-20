@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
 import { Brain, Save, Sparkles, Tag, Trash2, Upload } from "lucide-react";
+import { NoteShareButton } from "@/components/notes/note-share-button";
 import { FileUploader } from "@/components/upload/file-uploader";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ interface NoteEditorProps {
   initialContent?: string;
   initialTags?: string[];
   initialSummary?: string | null;
+  initialPublished?: boolean;
   onSave?: (data: {
     title: string;
     content: string;
@@ -36,6 +38,7 @@ export function NoteEditor({
   initialContent = "",
   initialTags = [],
   initialSummary = null,
+  initialPublished = false,
   onSave,
   onDelete,
 }: NoteEditorProps) {
@@ -145,6 +148,12 @@ export function NoteEditor({
             <Upload className="mr-1 h-4 w-4" />
             上传
           </Button>
+          {noteId && (
+            <NoteShareButton
+              noteId={noteId}
+              initialPublished={initialPublished}
+            />
+          )}
           <Separator orientation="vertical" className="h-6" />
           {onDelete && (
             <Button variant="ghost" size="sm" onClick={onDelete}>

@@ -12,6 +12,7 @@ interface NoteData {
   content: string;
   tags: string[];
   summary: string | null;
+  published: boolean;
 }
 
 export default function EditNotePage() {
@@ -83,6 +84,7 @@ export default function EditNotePage() {
         initialContent={note.content}
         initialTags={note.tags}
         initialSummary={note.summary}
+        initialPublished={note.published}
         onSave={handleSave}
         onDelete={handleDelete}
       />

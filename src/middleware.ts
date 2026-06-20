@@ -14,7 +14,8 @@ export default auth((req) => {
   if (
     pathname.startsWith("/api/auth") ||
     pathname === "/api/register" ||
-    pathname === "/api/health"
+    pathname === "/api/health" ||
+    pathname.startsWith("/share/")
   ) {
     return NextResponse.next();
   }
