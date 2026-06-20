@@ -2,7 +2,7 @@
 
 智能个人知识笔记 — Markdown 编辑、双向链接、混合搜索、知识图谱、AI 辅助。
 
-**在线演示**：https://noteflow-kent.vercel.app
+生产环境地址由部署平台的 `NEXTAUTH_URL` 决定，**请勿在文档或 Issue 中粘贴真实域名、密钥或数据库连接串**。
 
 ## 功能一览
 

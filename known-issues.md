@@ -2,6 +2,8 @@
 
 > 返回 [README](README.md) · 部署排障见 [docs/DEPLOY.md](docs/DEPLOY.md)
 
+反馈问题时请脱敏：不要粘贴 `.env` 内容、数据库 URL、API 密钥、剪藏令牌或用户数据。
+
 ## xAI 额度不足
 
 - **现象**：API 返回 `403 permission-denied`

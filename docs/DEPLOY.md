@@ -2,6 +2,19 @@
 
 > 返回 [README](../README.md)
 
+## 文档与隐私安全
+
+以下内容**不要**写入 Markdown、Issue、截图或公开仓库：
+
+- 数据库连接串（`DATABASE_URL`）及其中用户名、密码、主机
+- `AUTH_SECRET` / `NEXTAUTH_SECRET`、`GOOGLE_CLIENT_SECRET`、`XAI_API_KEY`、`BLOB_READ_WRITE_TOKEN`
+- 剪藏令牌、会话 Cookie、用户邮箱等运行时数据
+- 可识别个人的生产域名（文档统一使用 `https://your-app.vercel.app` 占位符）
+
+文档与脚本中的 URL、密钥均为占位符；真实值仅配置在 Vercel Dashboard 或本地未提交的 `.env` 文件中。
+
+---
+
 ## 部署流程
 
 推送 `main` 分支触发 Vercel 自动构建：
@@ -33,12 +46,15 @@ prisma generate && prisma db push --accept-data-loss && next build
 | `GOOGLE_CLIENT_SECRET` | 可选 | Google 登录 |
 | `XAI_API_KEY` | 可选 | Grok AI / Vision OCR；未配置或额度不足时使用本地回退 |
 
-维护脚本（**勿在命令行历史中保留真实密钥**）：
+维护脚本（**勿在命令行历史中保留真实密钥**；优先用环境变量传参）：
 
 ```bash
+# 推荐：通过环境变量传入，避免出现在 shell 历史
+GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=... npm run setup:google
+
 npm run setup:xai -- <your-xai-key>
 npm run setup:google -- <client-id> <client-secret>
-npm run verify:google
+npm run verify:google -- https://your-app.vercel.app
 npm run check:env
 ```
 
@@ -58,7 +74,11 @@ Authorized redirect URIs:
   http://localhost:3000/api/auth/callback/google
 ```
 
-应用处于 Testing 模式时，需将使用的登录邮箱加入 **Test users**。配置完成后运行 `npm run verify:google`。
+应用处于 Testing 模式时，需将使用的登录邮箱加入 **Test users**（测试邮箱亦勿写入公开文档）。配置完成后：
+
+```bash
+npm run verify:google -- https://your-app.vercel.app
+```
 
 ---
 
@@ -91,7 +111,7 @@ npm run db:stats       # 库统计（生产）
 
 1. 登录后在 `/dashboard/settings` 生成剪藏令牌
 2. Chrome 开发者模式加载 `extension/` 目录
-3. 填入站点 URL 与令牌；扩展通过 `POST /api/clip`（Bearer 鉴权）提交
+3. 填入站点 URL 与令牌（令牌仅保存在扩展本地存储，勿提交到 Git）；扩展通过 `POST /api/clip`（Bearer 鉴权）提交
 
 ---
 
@@ -100,7 +120,7 @@ npm run db:stats       # 库统计（生产）
 ```bash
 npm run deploy:check
 curl https://your-app.vercel.app/api/health
-npm run verify:google
+npm run verify:google -- https://your-app.vercel.app
 npm test
 ```
 
