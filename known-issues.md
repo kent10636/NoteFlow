@@ -33,8 +33,9 @@
 - **维护**: `npm run setup:xai -- <key>` 更新 Key
 
 ### 4. Google OAuth
-- **状态**: 未配置 `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
-- **影响**: Google 登录不可用（邮箱登录正常）
+- **状态**: ✅ 已配置并上线
+- **说明**: 登录/注册页支持 Google 一键登录，用户写入 Prisma 数据库
+- **回调**: `https://noteflow-mu-three.vercel.app/api/auth/callback/google`
 
 ### 5. OCR 行为（Serverless）
 - **状态**: 已优化，仍有平台限制

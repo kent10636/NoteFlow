@@ -47,8 +47,8 @@
 | `NEXTAUTH_URL` | ✅ 已配置 |
 | `BLOB_READ_WRITE_TOKEN` | ✅ 已配置 |
 | `XAI_API_KEY` | ✅ 已配置（账户额度待充值） |
-| `GOOGLE_CLIENT_ID` | ⬜ 未配置（可选） |
-| `GOOGLE_CLIENT_SECRET` | ⬜ 未配置（可选） |
+| `GOOGLE_CLIENT_ID` | ✅ 已配置 |
+| `GOOGLE_CLIENT_SECRET` | ✅ 已配置 |
 
 ## 近期完成
 
@@ -61,7 +61,7 @@
 ## 待办（可选）
 
 - [ ] xAI 控制台充值额度，启用完整 Grok AI / Vision OCR
-- [ ] 配置 Google OAuth
+- [x] 配置 Google OAuth
 - [ ] 绑定自定义域名
 - [ ] Preview 环境补全 `XAI_API_KEY`（CLI 交互限制，不影响生产）
 
