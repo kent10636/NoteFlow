@@ -1,103 +1,105 @@
 # 部署与运维
 
-## 生产环境
+> 返回 [README](../README.md)
 
-| 组件 | 地址 |
-|------|------|
-| 站点 | https://noteflow-mu-three.vercel.app |
-| GitHub | https://github.com/kent10636/NoteFlow |
-| Vercel | https://vercel.com/kentshi/noteflow |
-| 健康检查 | `/api/health` |
+## 部署流程
 
-推送 `main` 分支即自动部署。重连 Git：`npm run vercel:git-connect`
+推送 `main` 分支触发 Vercel 自动构建：
+
+```
+prisma generate && prisma db push --accept-data-loss && next build
+```
+
+构建完成后访问 `/api/health` 确认 `status: healthy`。
+
+手动重连 Git：`npm run vercel:git-connect`
 
 ---
 
 ## 环境变量
 
-在 [Vercel 环境变量](https://vercel.com/kentshi/noteflow/settings/environment-variables) 配置，**勿提交到 Git**：
+在 **Vercel Dashboard → Project → Settings → Environment Variables** 配置，**切勿提交到 Git**。
+
+模板见 [`.env.production.example`](../.env.production.example)。
 
 | 变量 | 必填 | 说明 |
 |------|------|------|
-| `DATABASE_URL` | ✅ | Prisma Postgres 连接串 |
+| `DATABASE_URL` | ✅ | PostgreSQL 连接串（生产建议 Prisma Postgres + pgvector） |
 | `AUTH_SECRET` | ✅ | `openssl rand -base64 32` |
 | `NEXTAUTH_SECRET` | ✅ | 同上 |
-| `NEXTAUTH_URL` | ✅ | `https://noteflow-mu-three.vercel.app` |
-| `BLOB_READ_WRITE_TOKEN` | ✅ | Blob 存储（`vercel blob create-store` 自动注入） |
-| `GOOGLE_CLIENT_ID` | ❌ | Google 登录 |
-| `GOOGLE_CLIENT_SECRET` | ❌ | Google 登录 |
-| `XAI_API_KEY` | ❌ | Grok AI / Vision OCR |
+| `NEXTAUTH_URL` | ✅ | 生产站点 URL，如 `https://your-app.vercel.app`（无末尾斜杠） |
+| `BLOB_READ_WRITE_TOKEN` | 推荐 | 文件上传（`vercel blob create-store` 可自动注入） |
+| `GOOGLE_CLIENT_ID` | 可选 | Google 登录 |
+| `GOOGLE_CLIENT_SECRET` | 可选 | Google 登录 |
+| `XAI_API_KEY` | 可选 | Grok AI / Vision OCR；未配置或额度不足时使用本地回退 |
 
-维护脚本：
+维护脚本（**勿在命令行历史中保留真实密钥**）：
 
 ```bash
-npm run setup:xai -- <key>
+npm run setup:xai -- <your-xai-key>
 npm run setup:google -- <client-id> <client-secret>
 npm run verify:google
+npm run check:env
 ```
 
 ---
 
 ## Google OAuth
 
-在 [Google Cloud Console](https://console.cloud.google.com/apis/credentials) 创建 **Web application** 客户端：
+在 [Google Cloud Console](https://console.cloud.google.com/apis/credentials) 创建 **Web application** 客户端，配置：
 
 ```
-Origins:  https://noteflow-mu-three.vercel.app  http://localhost:3000
-Redirect: https://noteflow-mu-three.vercel.app/api/auth/callback/google
-          http://localhost:3000/api/auth/callback/google
+Authorized JavaScript origins:
+  https://your-app.vercel.app
+  http://localhost:3000
+
+Authorized redirect URIs:
+  https://your-app.vercel.app/api/auth/callback/google
+  http://localhost:3000/api/auth/callback/google
 ```
 
-Testing 模式需将 Gmail 加入 Test users。配置后运行 `npm run verify:google`。
+应用处于 Testing 模式时，需将使用的登录邮箱加入 **Test users**。配置完成后运行 `npm run verify:google`。
 
 ---
 
 ## 数据库
 
-生产库使用 Prisma Postgres + pgvector。
-
 ### Schema 同步
 
-Vercel 构建命令已包含 `prisma db push`，每次部署自动同步 schema：
+- **自动**：每次 Vercel 构建执行 `prisma db push`
+- **运行时兜底**：`ensureSchema()` 在健康检查与登录时补齐缺失列（如 `User.clipToken`）
 
-```
-prisma generate && prisma db push --accept-data-loss && next build
-```
-
-应用启动时 `ensureSchema()` 会兜底补齐缺失列（如 `User.clipToken`），并在 `/api/health` 首次访问时触发。
-
-手动同步（仅在紧急情况下使用）：
+紧急手动同步：
 
 ```bash
 npm run db:push:production
 ```
 
-> 注意：本地 `.env` / `.env.local` 中的 `DATABASE_URL` 会覆盖 Vercel CLI 注入的生产变量。`db:push:production` 脚本会临时移开本地 env 文件。
+> 本地 `.env` / `.env.local` 会覆盖 `vercel env run` 注入的生产 `DATABASE_URL`。`db:push:production` 会临时移开本地 env 文件。
 
 ### 日常维护
 
 ```bash
-npm run db:pgvector    # 启用 pgvector
-npm run db:backfill    # 补全嵌入向量
-npm run db:stats       # 库统计
+npm run db:pgvector    # 启用 pgvector（生产）
+npm run db:backfill    # 补全嵌入向量（生产）
+npm run db:stats       # 库统计（生产）
 ```
 
 ---
 
 ## 浏览器剪藏
 
-1. 登录后访问 `/dashboard/settings`，生成剪藏令牌
-2. 安装 Chrome 扩展：加载项目 `extension/` 目录（开发者模式）
-3. 在扩展中填入生产地址 `https://noteflow-mu-three.vercel.app` 与令牌
-4. 扩展调用 `POST /api/clip`（Bearer 鉴权，无需浏览器 session）
+1. 登录后在 `/dashboard/settings` 生成剪藏令牌
+2. Chrome 开发者模式加载 `extension/` 目录
+3. 填入站点 URL 与令牌；扩展通过 `POST /api/clip`（Bearer 鉴权）提交
 
 ---
 
-## 验证
+## 部署后验证
 
 ```bash
 npm run deploy:check
-curl https://noteflow-mu-three.vercel.app/api/health
+curl https://your-app.vercel.app/api/health
 npm run verify:google
 npm test
 ```
@@ -106,13 +108,15 @@ npm test
 
 ## 常见问题
 
-| 问题 | 处理 |
+| 现象 | 处理 |
 |------|------|
-| Google 登录「请求无效」 | 运行 `npm run verify:google`，检查 redirect URI |
-| Google 登录「Server error」 | 多为 DB schema 未同步；重新部署或访问 `/api/health` 触发 `ensureSchema` |
-| 剪藏设置加载失败 | 重启 dev server 并执行 `npx prisma generate`；生产环境重新部署 |
-| 登录后 NextAuth 报错 | 确认 `NEXTAUTH_URL`、`AUTH_SECRET` |
-| 上传失败 | 检查 `BLOB_READ_WRITE_TOKEN` |
-| AI 返回本地回退 | xAI 账户充值 |
-| 构建失败 | 确认 Vercel 已配 `DATABASE_URL` |
-| 本地 schema 变更未生效 | `npx prisma generate && npm run dev`（Prisma Client 缓存需重启） |
+| Google 登录「请求无效」 | 检查 OAuth redirect URI 是否与 `NEXTAUTH_URL` 一致；运行 `verify:google` |
+| Google 登录「Server error」 | 多为 DB schema 未同步；重新部署或访问 `/api/health` |
+| 剪藏设置 500 | 执行 `npx prisma generate` 并重启；生产环境重新部署 |
+| NextAuth 会话异常 | 确认 `NEXTAUTH_URL`、`AUTH_SECRET` 已配置且一致 |
+| 上传失败 503 | 配置 `BLOB_READ_WRITE_TOKEN` |
+| AI 返回本地回退文案 | xAI 额度不足，见 [known-issues.md](../known-issues.md) |
+| 构建失败 | 确认 Vercel 已配置 `DATABASE_URL` |
+| 本地 `Unknown field` | `npx prisma generate` 后重启 dev server |
+
+更多限制说明：[known-issues.md](../known-issues.md)

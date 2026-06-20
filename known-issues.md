@@ -1,25 +1,29 @@
-# 已知问题
+# 已知问题与限制
 
-> 更新：2026-06-21
+> 返回 [README](README.md) · 部署排障见 [docs/DEPLOY.md](docs/DEPLOY.md)
 
-## xAI 账户额度不足
+## xAI 额度不足
 
 - **现象**：API 返回 `403 permission-denied`
-- **影响**：AI 摘要/标签/回顾、Vision OCR、高质量 embedding 使用本地回退
-- **处理**：在 https://console.x.ai/ 充值，无需改代码
+- **影响**：AI 摘要/标签/回顾、Vision OCR、高质量 embedding 降级为本地回退
+- **处理**：在 [xAI Console](https://console.x.ai/) 充值或提升额度，无需改代码
 
-## Preview 环境变量不完整
+## 可选服务未配置
 
-- CLI 添加 Preview 变量时需交互选分支，部分 Key 可能未写入
-- 不影响生产环境
+| 服务 | 未配置时的行为 |
+|------|----------------|
+| `XAI_API_KEY` | AI 与 Vision OCR 使用本地启发式回退 |
+| `BLOB_READ_WRITE_TOKEN` | 上传 API 返回 503 |
+| `GOOGLE_CLIENT_*` | 仅邮箱密码登录可用 |
 
-## 本地开发注意事项
+## 本地开发
 
-- **Prisma Client 缓存**：修改 `schema.prisma` 后需执行 `npx prisma generate` 并重启 dev server，否则可能出现 `Unknown field` 类错误
-- **本地 env 覆盖**：`.env` / `.env.local` 中的 `DATABASE_URL` 指向本地库，会覆盖 `vercel env run` 注入的生产连接串；手动操作生产库请用 `npm run db:push:production`
+- **Prisma Client 缓存**：修改 `schema.prisma` 后执行 `npx prisma generate` 并重启 dev server，否则可能出现 `Unknown field` 错误
+- **env 覆盖**：本地 `.env` / `.env.local` 的 `DATABASE_URL` 会覆盖 `vercel env run` 注入的生产连接；操作生产库请用 `npm run db:push:production`
 
-## 技术备注
+## 平台备注
 
-- Next.js 16 提示 middleware 将迁移至 proxy（当前仅警告）
+- Next.js 16 提示 middleware 将迁移至 proxy（当前仅警告，不影响功能）
 - Prisma 7 使用 `@prisma/adapter-pg`，需正确配置 `DATABASE_URL`
 - 生产 schema 由构建时 `prisma db push` + 运行时 `ensureSchema()` 双重保障
+- Vercel Preview 环境变量可能不完整，不影响 Production
