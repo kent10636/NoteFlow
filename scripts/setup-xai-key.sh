@@ -12,10 +12,12 @@ if [ -z "$KEY" ]; then
   exit 1
 fi
 
-for ENV in production preview development; do
-  printf '%s' "$KEY" | npx vercel env add XAI_API_KEY "$ENV" --sensitive --force --yes
-  echo "✅ $ENV"
-done
+printf '%s' "$KEY" | npx vercel env add XAI_API_KEY production --sensitive --force --yes
+echo "✅ production"
+printf '%s' "$KEY" | npx vercel env add XAI_API_KEY preview --sensitive --force --yes
+echo "✅ preview"
+printf '%s' "$KEY" | npx vercel env add XAI_API_KEY development --force --yes
+echo "✅ development"
 
 echo ""
 echo "环境变量已更新。推送代码触发重新部署："
