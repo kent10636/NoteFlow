@@ -4,7 +4,7 @@ function getApiKey(): string | undefined {
   return process.env.XAI_API_KEY;
 }
 
-async function chatCompletion(
+export async function chatCompletion(
   systemPrompt: string,
   userPrompt: string
 ): Promise<string> {
@@ -57,6 +57,10 @@ function fallbackResponse(systemPrompt: string, userPrompt: string): string {
       .filter((w) => w.length > 4)
       .slice(0, 5);
     return JSON.stringify(words.length > 0 ? words : ["笔记", "知识", "学习"]);
+  }
+  if (systemPrompt.includes("daily review") || systemPrompt.includes("每日回顾")) {
+    const noteCount = userPrompt.match(/Total notes: (\d+)/)?.[1] ?? "0";
+    return `今日共记录 **${noteCount}** 条笔记。继续保持学习节奏，知识积累是一个持续的过程。建议明天回顾今日标记的重点内容，并尝试建立笔记之间的关联。`;
   }
   return "[]";
 }

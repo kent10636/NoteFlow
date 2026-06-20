@@ -38,5 +38,31 @@ export async function GET() {
     strength: link.strength,
   }));
 
+  // Generate tag-based implicit links
+  const existingPairs = new Set(
+    edges.map((e) => `${e.source}-${e.target}`)
+  );
+
+  for (let i = 0; i < notes.length; i++) {
+    for (let j = i + 1; j < notes.length; j++) {
+      const a = notes[i];
+      const b = notes[j];
+      const sharedTags = a.tags.filter((t) => b.tags.includes(t));
+      if (sharedTags.length > 0) {
+        const pairKey = `${a.id}-${b.id}`;
+        const reverseKey = `${b.id}-${a.id}`;
+        if (!existingPairs.has(pairKey) && !existingPairs.has(reverseKey)) {
+          edges.push({
+            id: `tag-${a.id}-${b.id}`,
+            source: a.id,
+            target: b.id,
+            strength: Math.min(0.5, sharedTags.length * 0.15),
+          });
+          existingPairs.add(pairKey);
+        }
+      }
+    }
+  }
+
   return NextResponse.json({ nodes, edges });
 }

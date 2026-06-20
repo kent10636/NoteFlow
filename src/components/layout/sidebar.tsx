@@ -4,13 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BookOpen,
-  Brain,
+  CalendarDays,
   GitBranch,
   Home,
   LogOut,
   PenLine,
   Search,
   Sparkles,
+  Upload,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
@@ -22,8 +23,10 @@ const navItems = [
   { href: "/dashboard", label: "仪表盘", icon: Home },
   { href: "/dashboard/notes", label: "我的笔记", icon: BookOpen },
   { href: "/dashboard/notes/new", label: "新建笔记", icon: PenLine },
+  { href: "/dashboard/upload", label: "文件上传", icon: Upload },
   { href: "/dashboard/search", label: "语义搜索", icon: Search },
   { href: "/dashboard/graph", label: "知识图谱", icon: GitBranch },
+  { href: "/dashboard/review", label: "每日回顾", icon: CalendarDays },
 ];
 
 export function Sidebar() {

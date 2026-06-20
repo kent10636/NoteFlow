@@ -1,72 +1,49 @@
-# NoteFlow 验收清单
+# NoteFlow 最终验收清单
 
-## 基础功能
+## 测试 (25/25 = 100%)
 
-- [x] 项目可本地启动 (`npm run dev`)
-- [x] 生产构建通过 (`npm run build`)
-- [x] 单元测试通过 (`npm test` — 8/8)
-- [x] Git 仓库已初始化
+- [x] 单元测试 — AI、日期、嵌入向量
+- [x] 集成测试 — API 验证规则
+- [x] 图谱逻辑测试 — 标签关联边生成
+- [x] 每日回顾测试
+- [x] 注册验证测试
 
-## 用户认证
+## 核心功能验证
 
-- [x] 邮箱密码注册 (`POST /api/register`)
-- [x] 邮箱密码登录 (NextAuth Credentials)
-- [x] Google OAuth 集成（需配置凭据）
-- [x] 路由保护中间件（未登录跳转 /login）
-- [x] 登录/注册页面 UI
+- [x] 落地页加载 (200)
+- [x] 登录页加载 (200)
+- [x] 用户注册 API
+- [x] 笔记 CRUD API
+- [x] AI 摘要/标签/推荐 API
+- [x] 语义搜索 API
+- [x] 生产构建通过
 
-## 笔记 CRUD
+## 新增功能
 
-- [x] 创建笔记 (`POST /api/notes`)
-- [x] 读取笔记列表 (`GET /api/notes`)
-- [x] 读取单条笔记 (`GET /api/notes/[id]`)
-- [x] 更新笔记 (`PUT /api/notes/[id]`)
-- [x] 删除笔记 (`DELETE /api/notes/[id]`)
-- [x] Markdown 编辑器（实时预览）
-- [x] 笔记列表/卡片展示
+- [x] 知识图谱增强 — 标签色、点击跳转、标签关联虚线、图例
+- [x] 每日 AI 回顾页面 (`/dashboard/review`)
+- [x] 文件上传 + OCR (`/dashboard/upload`)
+- [x] 笔记编辑器内嵌上传
 
-## AI 智能功能
+## 代码质量
 
-- [x] 一键摘要 (`POST /api/ai/summarize`)
-- [x] 自动标签 (`POST /api/ai/tags`)
-- [x] 相关笔记推荐 (`POST /api/ai/recommend`)
-- [x] Grok API 集成 + 本地回退
-- [x] 向量嵌入生成
-
-## 语义搜索
-
-- [x] 向量语义搜索 API (`POST /api/search`)
-- [x] pgvector 集成
-- [x] 文本搜索回退
-- [x] 搜索页面 UI
-
-## 知识图谱
-
-- [x] 笔记关联存储 (NoteLink 模型)
-- [x] 图谱数据 API (`GET /api/graph`)
-- [x] React Flow 可视化
-- [x] 知识图谱页面
-
-## UI/UX
-
-- [x] 响应式布局
-- [x] 侧边栏导航
-- [x] 现代美观界面 (shadcn/ui + Tailwind)
-- [x] 落地页
-- [x] 仪表盘统计
-- [x] Toast 通知
+- [x] TypeScript 严格模式通过
+- [x] Edge 中间件兼容（auth.config 分离）
+- [x] Prisma 7 adapter 模式
+- [x] 响应式 UI + shadcn/ui
 
 ## 部署
 
-- [ ] Vercel 线上部署（需用户授权 Vercel CLI）
 - [x] `vercel.json` 配置
-- [x] `.env.example` 环境变量模板
-- [x] `docker-compose.yml` 数据库配置
-- [x] README 文档
+- [x] `railway.toml` 配置
+- [x] `docker-compose.yml`
+- [x] `.env.example`
+- [ ] Vercel 线上链接（需用户授权 CLI）
+- [ ] Railway 数据库链接（需用户授权 CLI）
 
 ## 文档
 
-- [x] `plan.md` 架构规划
-- [x] `README.md` 使用说明
-- [x] `known-issues.md` 已知问题
-- [x] `ACCEPTANCE.md` 验收清单
+- [x] README.md（部署指南、未来扩展）
+- [x] known-issues.md
+- [x] ACCEPTANCE.md
+- [x] plan.md

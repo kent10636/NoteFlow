@@ -2,7 +2,8 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
-import { Brain, Save, Sparkles, Tag, Trash2 } from "lucide-react";
+import { Brain, Save, Sparkles, Tag, Trash2, Upload } from "lucide-react";
+import { FileUploader } from "@/components/upload/file-uploader";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,7 @@ export function NoteEditor({
   const [summary, setSummary] = useState(initialSummary);
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState<string | null>(null);
+  const [showUpload, setShowUpload] = useState(false);
 
   const handleSave = useCallback(async () => {
     if (!title.trim()) {
@@ -135,6 +137,14 @@ export function NoteEditor({
             <Brain className="mr-1 h-4 w-4" />
             {aiLoading === "recommend" ? "分析中..." : "推荐"}
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowUpload(!showUpload)}
+          >
+            <Upload className="mr-1 h-4 w-4" />
+            上传
+          </Button>
           <Separator orientation="vertical" className="h-6" />
           {onDelete && (
             <Button variant="ghost" size="sm" onClick={onDelete}>
@@ -165,6 +175,20 @@ export function NoteEditor({
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {showUpload && (
+        <div className="border-b px-6 py-4">
+          <FileUploader
+            noteId={noteId}
+            onUploadComplete={({ ocrText }) => {
+              if (ocrText) {
+                setContent((prev) => prev + `\n\n## OCR 提取内容\n\n${ocrText}`);
+              }
+              setShowUpload(false);
+            }}
+          />
         </div>
       )}
 
