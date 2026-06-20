@@ -16,13 +16,17 @@ export default function SettingsPage() {
   const fetchToken = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/clip-token");
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setConfigured(data.configured);
-      setToken(data.token);
-    } catch {
-      toast.error("加载剪藏设置失败");
+      const res = await fetch("/api/clip-token", { cache: "no-store" });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.error ?? "加载剪藏设置失败");
+      }
+      setConfigured(!!data?.configured);
+      setToken(data?.token ?? null);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "加载剪藏设置失败"
+      );
     } finally {
       setLoading(false);
     }
