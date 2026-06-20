@@ -20,6 +20,7 @@
     "db:pgvector": "vercel env run --environment production -- npx tsx scripts/enable-pgvector.ts",
     "db:backfill": "vercel env run --environment production -- npx tsx scripts/backfill-embeddings.ts",
     "db:stats": "vercel env run --environment production -- npx tsx scripts/db-stats.ts",
+    "vercel:git-connect": "bash scripts/connect-vercel-git.sh",
     "postinstall": "prisma generate"
   },
   "dependencies": {
