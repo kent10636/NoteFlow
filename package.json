@@ -1,7 +1,7 @@
 {
   "name": "noteflow",
   "version": "1.0.0",
-  "homepage": "https://noteflow-notes.vercel.app",
+  "homepage": "https://noteflow-kent.vercel.app",
   "private": true,
   "scripts": {
     "dev": "next dev",

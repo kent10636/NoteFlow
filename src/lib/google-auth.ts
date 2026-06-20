@@ -6,7 +6,7 @@ export function isGoogleAuthConfigured(): boolean {
   );
 }
 
-const DEFAULT_PRODUCTION_ORIGIN = "https://noteflow-notes.vercel.app";
+const DEFAULT_PRODUCTION_ORIGIN = "https://noteflow-kent.vercel.app";
 
 function getProductionOrigin(): string {
   return process.env.NEXTAUTH_URL?.replace(/\/$/, "") || DEFAULT_PRODUCTION_ORIGIN;

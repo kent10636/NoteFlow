@@ -2,7 +2,7 @@
 # Verify Google OAuth redirect URI is registered in Google Cloud Console.
 set -euo pipefail
 
-BASE_URL="${1:-${NEXTAUTH_URL:-https://noteflow-notes.vercel.app}}"
+BASE_URL="${1:-${NEXTAUTH_URL:-https://noteflow-kent.vercel.app}}"
 BASE_URL="${BASE_URL%/}"
 COOKIE_JAR="$(mktemp)"
 trap 'rm -f "$COOKIE_JAR"' EXIT
