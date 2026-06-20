@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   clampSelectedIndex,
@@ -10,12 +10,12 @@ import {
   type NoteTitleOption,
 } from "@/lib/wikilink-autocomplete";
 
+const TEXTAREA_SELECTOR = ".w-md-editor-text-input";
+
 export function useWikiLinkAutocomplete({
-  content,
   noteId,
   onContentChange,
 }: {
-  content: string;
   noteId?: string;
   onContentChange: (value: string) => void;
 }) {
@@ -24,6 +24,9 @@ export function useWikiLinkAutocomplete({
     typeof detectWikiLinkTrigger
   > | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const onContentChangeRef = useRef(onContentChange);
+  onContentChangeRef.current = onContentChange;
 
   useEffect(() => {
     fetch("/api/notes/titles")
@@ -37,41 +40,91 @@ export function useWikiLinkAutocomplete({
     [titles, trigger, noteId]
   );
 
-  const syncFromTextarea = (textarea: HTMLTextAreaElement) => {
+  const stateRef = useRef({ trigger, options, selectedIndex });
+  stateRef.current = { trigger, options, selectedIndex };
+
+  const applySelection = useCallback(
+    (title: string, textarea: HTMLTextAreaElement) => {
+      const cursor = textarea.selectionStart ?? 0;
+      const activeTrigger =
+        detectWikiLinkTrigger(textarea.value, cursor) ??
+        stateRef.current.trigger;
+      if (!activeTrigger) return;
+
+      const { nextContent, nextCursor } = insertWikiLink(
+        textarea.value,
+        activeTrigger,
+        title
+      );
+      onContentChangeRef.current(nextContent);
+      setTrigger(null);
+      setSelectedIndex(0);
+
+      requestAnimationFrame(() => {
+        textarea.focus();
+        textarea.setSelectionRange(nextCursor, nextCursor);
+      });
+    },
+    []
+  );
+
+  const syncFromTextarea = useCallback((textarea: HTMLTextAreaElement) => {
     const next = detectWikiLinkTrigger(
       textarea.value,
       textarea.selectionStart ?? 0
     );
     setTrigger(next);
     if (next) setSelectedIndex(0);
-  };
+  }, []);
 
-  const applySelection = (
-    title: string,
-    textarea: HTMLTextAreaElement | null
-  ) => {
-    if (!textarea) return;
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target;
+      if (!(target instanceof HTMLTextAreaElement)) return;
+      if (!target.matches(TEXTAREA_SELECTOR)) return;
 
-    const cursor = textarea.selectionStart ?? 0;
-    const activeTrigger =
-      detectWikiLinkTrigger(textarea.value, cursor) ?? trigger;
-    if (!activeTrigger) return;
+      const { trigger: activeTrigger, options: activeOptions, selectedIndex: index } =
+        stateRef.current;
+      if (!activeTrigger || activeOptions.length === 0) return;
 
-    const { nextContent, nextCursor } = insertWikiLink(
-      textarea.value,
-      activeTrigger,
-      title
-    );
-    onContentChange(nextContent);
-    setTrigger(null);
-    setSelectedIndex(0);
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        event.stopPropagation();
+        setSelectedIndex((current) =>
+          clampSelectedIndex(current + 1, activeOptions.length)
+        );
+        return;
+      }
 
-    requestAnimationFrame(() => {
-      if (!textarea) return;
-      textarea.focus();
-      textarea.setSelectionRange(nextCursor, nextCursor);
-    });
-  };
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        event.stopPropagation();
+        setSelectedIndex((current) =>
+          clampSelectedIndex(current - 1, activeOptions.length)
+        );
+        return;
+      }
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        setTrigger(null);
+        return;
+      }
+
+      if (event.key === "Enter" || event.key === "Tab") {
+        event.preventDefault();
+        event.stopPropagation();
+        const selected = activeOptions[index];
+        if (selected) {
+          applySelection(selected.title, target);
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown, true);
+    return () => document.removeEventListener("keydown", handleKeyDown, true);
+  }, [applySelection]);
 
   const textareaProps = {
     onKeyUp: (event: React.KeyboardEvent<HTMLTextAreaElement>) =>
@@ -80,39 +133,8 @@ export function useWikiLinkAutocomplete({
       syncFromTextarea(event.currentTarget),
     onSelect: (event: React.SyntheticEvent<HTMLTextAreaElement>) =>
       syncFromTextarea(event.currentTarget),
-    onKeyDown: (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (!trigger || options.length === 0) return;
-
-      if (event.key === "ArrowDown") {
-        event.preventDefault();
-        setSelectedIndex((index) =>
-          clampSelectedIndex(index + 1, options.length)
-        );
-        return;
-      }
-
-      if (event.key === "ArrowUp") {
-        event.preventDefault();
-        setSelectedIndex((index) =>
-          clampSelectedIndex(index - 1, options.length)
-        );
-        return;
-      }
-
-      if (event.key === "Escape") {
-        event.preventDefault();
-        setTrigger(null);
-        return;
-      }
-
-      if (event.key === "Enter" || event.key === "Tab") {
-        event.preventDefault();
-        const selected = options[selectedIndex];
-        if (selected) {
-          applySelection(selected.title, event.currentTarget);
-        }
-      }
-    },
+    onInput: (event: React.FormEvent<HTMLTextAreaElement>) =>
+      syncFromTextarea(event.currentTarget),
   } as const;
 
   const AutocompleteList =
@@ -135,9 +157,9 @@ export function useWikiLinkAutocomplete({
                 onMouseDown={(event) => {
                   event.preventDefault();
                   const textarea = document.querySelector<HTMLTextAreaElement>(
-                    ".w-md-editor-text-input"
+                    TEXTAREA_SELECTOR
                   );
-                  applySelection(option.title, textarea);
+                  if (textarea) applySelection(option.title, textarea);
                 }}
               >
                 {option.title}

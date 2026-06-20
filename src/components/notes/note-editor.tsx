@@ -54,7 +54,6 @@ export function NoteEditor({
 
   const { textareaProps: wikiLinkTextareaProps, AutocompleteList } =
     useWikiLinkAutocomplete({
-      content,
       noteId,
       onContentChange: setContent,
     });
