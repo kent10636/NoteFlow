@@ -14,6 +14,12 @@ import {
   isUploadStorageReady,
   storeUploadedFile,
 } from "@/lib/storage";
+import {
+  buildNoteContentFromUpload,
+  buildNoteTagsFromUpload,
+  buildNoteTitleFromFileName,
+  shouldAutoCreateNote,
+} from "@/lib/upload-note";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = [
@@ -92,17 +98,28 @@ export async function POST(request: Request) {
     });
 
     let note = null;
-    if (createNote && ocrText) {
+    let linkedAttachment = attachment;
+
+    if (
+      shouldAutoCreateNote({
+        createNote,
+        existingNoteId: noteId,
+      })
+    ) {
       note = await prisma.note.create({
         data: {
-          title: `📎 ${file.name}`,
-          content: `## 附件: ${file.name}\n\n${ocrText}`,
-          tags: ["上传", file.type.startsWith("image/") ? "图片" : "PDF"],
+          title: buildNoteTitleFromFileName(file.name),
+          content: buildNoteContentFromUpload({
+            fileName: file.name,
+            ocrText,
+            url,
+          }),
+          tags: buildNoteTagsFromUpload(file.type),
           userId: session.user.id,
         },
       });
 
-      await prisma.attachment.update({
+      linkedAttachment = await prisma.attachment.update({
         where: { id: attachment.id },
         data: { noteId: note.id },
       });
@@ -113,7 +130,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({
-      attachment,
+      attachment: linkedAttachment,
       note,
       ocrText,
     });

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { storeNoteEmbedding } from "@/lib/embeddings";
+import { syncNoteLinks } from "@/lib/wikilink";
 
 export async function GET() {
   const session = await auth();
@@ -49,6 +50,8 @@ export async function POST(request: Request) {
         userId: session.user.id,
       },
     });
+
+    await syncNoteLinks(session.user.id, note.id, note.content, prisma);
 
     // Generate embedding asynchronously
     storeNoteEmbedding(note.id, `${note.title}\n${note.content}`).catch(

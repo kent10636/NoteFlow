@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { storeNoteEmbedding } from "@/lib/embeddings";
+import { syncNoteLinks } from "@/lib/wikilink";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -53,6 +54,8 @@ export async function PUT(request: Request, { params }: RouteParams) {
         ...(published !== undefined && { published }),
       },
     });
+
+    await syncNoteLinks(session.user.id, note.id, note.content, prisma);
 
     storeNoteEmbedding(note.id, `${note.title}\n${note.content}`).catch(
       console.error

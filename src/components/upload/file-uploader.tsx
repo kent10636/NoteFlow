@@ -5,6 +5,7 @@ import { FileText, Image, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 
 interface FileUploaderProps {
   noteId?: string;
@@ -18,6 +19,7 @@ interface FileUploaderProps {
 export function FileUploader({ noteId, onUploadComplete }: FileUploaderProps) {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [autoCreateNote, setAutoCreateNote] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = useCallback(
@@ -27,7 +29,9 @@ export function FileUploader({ noteId, onUploadComplete }: FileUploaderProps) {
         const formData = new FormData();
         formData.append("file", file);
         if (noteId) formData.append("noteId", noteId);
-        formData.append("createNote", (!noteId).toString());
+        if (!noteId) {
+          formData.append("createNote", autoCreateNote.toString());
+        }
 
         const res = await fetch("/api/upload", {
           method: "POST",
@@ -55,7 +59,7 @@ export function FileUploader({ noteId, onUploadComplete }: FileUploaderProps) {
         setUploading(false);
       }
     },
-    [noteId, onUploadComplete]
+    [autoCreateNote, noteId, onUploadComplete]
   );
 
   const onDrop = useCallback(
@@ -113,6 +117,18 @@ export function FileUploader({ noteId, onUploadComplete }: FileUploaderProps) {
           )}
           {uploading ? "处理中..." : "选择文件"}
         </Button>
+        {!noteId && (
+          <Label className="cursor-pointer font-normal text-muted-foreground">
+            <input
+              type="checkbox"
+              className="size-4 rounded border border-input accent-primary"
+              checked={autoCreateNote}
+              disabled={uploading}
+              onChange={(e) => setAutoCreateNote(e.target.checked)}
+            />
+            上传后自动创建笔记
+          </Label>
+        )}
       </CardContent>
     </Card>
   );
