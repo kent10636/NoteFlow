@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkEnv, isDatabaseConfigured } from "@/lib/env";
+import { ensureSchema } from "@/lib/ensure-schema";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -8,6 +9,7 @@ export async function GET() {
 
   if (isDatabaseConfigured()) {
     try {
+      await ensureSchema();
       await prisma.$queryRaw`SELECT 1`;
       database = true;
     } catch {

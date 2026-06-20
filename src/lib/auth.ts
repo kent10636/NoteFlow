@@ -5,6 +5,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { authConfig } from "@/lib/auth.config";
+import { ensureSchema } from "@/lib/ensure-schema";
 import { isGoogleAuthConfigured } from "@/lib/google-auth";
 
 const providers = [
@@ -58,4 +59,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(prisma),
   providers,
+  events: {
+    async signIn() {
+      await ensureSchema();
+    },
+  },
 });
+
+// Warm schema on auth route load so OAuth callback succeeds on first attempt.
+void ensureSchema().catch(() => {});
