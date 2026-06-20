@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { PenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NoteCard } from "@/components/notes/note-card";
+import { NoteIoPanel } from "@/components/notes/note-io-panel";
 
 export default async function NotesPage() {
   const session = await auth();
@@ -30,12 +31,15 @@ export default async function NotesPage() {
             共 {notes.length} 条笔记
           </p>
         </div>
-        <Link href="/dashboard/notes/new">
-          <Button className="gap-2">
-            <PenLine className="h-4 w-4" />
-            新建笔记
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <NoteIoPanel />
+          <Link href="/dashboard/notes/new">
+            <Button className="gap-2">
+              <PenLine className="h-4 w-4" />
+              新建笔记
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {notes.length === 0 ? (

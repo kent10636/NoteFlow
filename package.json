@@ -24,6 +24,7 @@
     "setup:xai": "bash scripts/setup-xai-key.sh",
     "setup:firewall": "bash scripts/setup-firewall-rate-limits.sh",
     "setup:google": "bash scripts/setup-google-oauth.sh",
+    "verify:google": "bash scripts/verify-google-oauth.sh",
     "postinstall": "prisma generate"
   },
   "dependencies": {

@@ -144,9 +144,55 @@ curl https://noteflow-mu-three.vercel.app/api/health
 
 ---
 
+## Google 登录（OAuth）
+
+### 1. 配置 Google Cloud Console
+
+在 [Credentials](https://console.cloud.google.com/apis/credentials) 创建 **Web application** OAuth 客户端，填入：
+
+**Authorized JavaScript origins:**
+```
+https://noteflow-mu-three.vercel.app
+http://localhost:3000
+```
+
+**Authorized redirect URIs:**
+```
+https://noteflow-mu-three.vercel.app/api/auth/callback/google
+http://localhost:3000/api/auth/callback/google
+```
+
+在 [OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent)：
+- 应用状态为 **Testing** 时，将你的 Gmail 加入 **Test users**
+- **Authorized domains** 添加 `vercel.app`
+
+### 2. 同步凭据到 Vercel
+
+```bash
+npm run setup:google -- <client-id> <client-secret>
+git commit --allow-empty -m "chore: redeploy after Google OAuth" && git push
+```
+
+### 3. 验证
+
+```bash
+npm run verify:google
+```
+
+---
+
 ## 常见问题
 
-### 登录后报错
+### Google 登录提示「禁止访问：此应用的请求无效」
+
+这是 Google 的 `redirect_uri_mismatch` 错误，表示回调地址未在 Google Cloud Console 注册。
+
+运行 `npm run verify:google` 查看需要填写的精确 URI。常见原因：
+- redirect URI 拼写错误或多了尾部斜杠
+- OAuth 客户端类型不是 Web application
+- Testing 模式下当前 Gmail 未加入 Test users
+
+### 登录后报错（NextAuth）
 - 确认 `NEXTAUTH_URL` 与 Vercel 域名一致
 - 确认 `AUTH_SECRET` 已配置
 
