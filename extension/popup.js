@@ -1,3 +1,5 @@
+import { normalizeBaseUrl, validateClipConfig } from "./config.js";
+
 const baseUrlInput = document.getElementById("baseUrl");
 const tokenInput = document.getElementById("token");
 const saveBtn = document.getElementById("save");
@@ -15,11 +17,12 @@ chrome.storage.sync.get(["baseUrl", "token"], (data) => {
 });
 
 saveBtn.addEventListener("click", () => {
-  const baseUrl = baseUrlInput.value.trim().replace(/\/$/, "");
+  const baseUrl = normalizeBaseUrl(baseUrlInput.value);
   const token = tokenInput.value.trim();
+  const error = validateClipConfig(baseUrl, token);
 
-  if (!baseUrl || !token) {
-    setStatus("请填写地址和令牌", true);
+  if (error) {
+    setStatus(error, true);
     return;
   }
 
@@ -38,7 +41,8 @@ clipBtn.addEventListener("click", async () => {
       "token",
     ]);
 
-    if (!baseUrl || !token) {
+    const configError = validateClipConfig(baseUrl ?? "", token ?? "");
+    if (configError) {
       throw new Error("请先保存地址和令牌");
     }
 
@@ -53,7 +57,7 @@ clipBtn.addEventListener("click", async () => {
       action: "getPageData",
     });
 
-    const res = await fetch(`${baseUrl.replace(/\/$/, "")}/api/clip`, {
+    const res = await fetch(`${normalizeBaseUrl(baseUrl)}/api/clip`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

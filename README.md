@@ -35,7 +35,7 @@ npm run dev                # http://localhost:3000
 ## 常用命令
 
 ```bash
-npm test                   # 277 tests
+npm test                   # 386 tests（详见 docs/TEST-COVERAGE.md）
 npm run test:api           # API 路由测试
 npm run test:lib           # 工具库测试
 npm run test:components    # React 组件测试
@@ -56,6 +56,8 @@ git push origin main       # Vercel 自动部署（构建时自动 prisma db pus
 环境变量模板：`.env.production.example`（仅占位符）
 
 完整运维说明：[docs/DEPLOY.md](./docs/DEPLOY.md)
+
+测试覆盖详情：[docs/TEST-COVERAGE.md](./docs/TEST-COVERAGE.md)
 
 ## 浏览器剪藏扩展
 
