@@ -1,6 +1,33 @@
 import { createWorker } from "tesseract.js";
 
 const XAI_API_URL = "https://api.x.ai/v1";
+const TESSERACT_TIMEOUT_MS = 25_000;
+
+function isVercelRuntime(): boolean {
+  return process.env.VERCEL === "1";
+}
+
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  label: string
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`${label} timed out after ${timeoutMs}ms`)),
+          timeoutMs
+        );
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 /** Extract text from PDF buffer */
 export async function extractPdfText(buffer: Buffer): Promise<string> {
@@ -22,12 +49,20 @@ export async function extractPdfText(buffer: Buffer): Promise<string> {
 
 /** Extract text from image buffer using Tesseract OCR */
 export async function extractImageText(buffer: Buffer): Promise<string> {
+  if (isVercelRuntime() && !process.env.XAI_API_KEY?.trim()) {
+    return "【未配置 XAI_API_KEY，Serverless 环境图片 OCR 已跳过。请配置后使用 Vision OCR】";
+  }
+
   let worker;
   try {
     worker = await createWorker("chi_sim+eng");
     const {
       data: { text },
-    } = await worker.recognize(buffer);
+    } = await withTimeout(
+      worker.recognize(buffer),
+      TESSERACT_TIMEOUT_MS,
+      "Tesseract OCR"
+    );
     return text?.trim() ?? "";
   } catch (error) {
     console.error("OCR error:", error);
