@@ -1,8 +1,24 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import {
+  checkRateLimit,
+  getClientIp,
+  rateLimitKey,
+  RATE_LIMITS,
+} from "@/lib/rate-limit";
+import { rateLimitedResponse } from "@/lib/rate-limit-response";
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const limit = await checkRateLimit(
+    rateLimitKey("register", ip),
+    RATE_LIMITS.register
+  );
+  if (!limit.allowed) {
+    return rateLimitedResponse(limit, "注册过于频繁，请 15 分钟后再试");
+  }
+
   try {
     const { name, email, password } = await request.json();
 

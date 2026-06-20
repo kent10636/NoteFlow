@@ -4,6 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { processFileOcr } from "@/lib/ocr";
 import { storeNoteEmbedding } from "@/lib/embeddings";
 import {
+  checkRateLimit,
+  getClientIp,
+  rateLimitKey,
+  RATE_LIMITS,
+} from "@/lib/rate-limit";
+import { rateLimitedResponse } from "@/lib/rate-limit-response";
+import {
   isUploadStorageReady,
   storeUploadedFile,
 } from "@/lib/storage";
@@ -21,6 +28,14 @@ export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "未授权" }, { status: 401 });
+  }
+
+  const uploadLimit = await checkRateLimit(
+    rateLimitKey("upload", getClientIp(request), session.user.id),
+    RATE_LIMITS.upload
+  );
+  if (!uploadLimit.allowed) {
+    return rateLimitedResponse(uploadLimit, "上传过于频繁，请 10 分钟后再试");
   }
 
   if (!isUploadStorageReady()) {
