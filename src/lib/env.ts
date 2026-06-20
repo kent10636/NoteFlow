@@ -14,6 +14,7 @@ const REQUIRED_VARS = [
 
 const OPTIONAL_VARS = [
   { key: "XAI_API_KEY", description: "Grok AI 完整功能" },
+  { key: "BLOB_READ_WRITE_TOKEN", description: "Vercel Blob 文件上传" },
   { key: "GOOGLE_CLIENT_ID", description: "Google 登录" },
   { key: "GOOGLE_CLIENT_SECRET", description: "Google 登录" },
 ] as const;
@@ -43,6 +44,16 @@ export function checkEnv(): EnvStatus {
     }
     if (!process.env.XAI_API_KEY?.trim()) {
       warnings.push("未配置 XAI_API_KEY，AI 功能将使用本地回退");
+    }
+    if (
+      process.env.VERCEL === "1" &&
+      !process.env.BLOB_READ_WRITE_TOKEN?.trim() &&
+      !(
+        process.env.BLOB_STORE_ID?.trim() &&
+        process.env.VERCEL_OIDC_TOKEN?.trim()
+      )
+    ) {
+      warnings.push("未配置 Vercel Blob，生产环境文件上传不可用");
     }
   }
 

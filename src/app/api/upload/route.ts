@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { processFileOcr } from "@/lib/ocr";
 import { storeNoteEmbedding } from "@/lib/embeddings";
+import {
+  isUploadStorageReady,
+  storeUploadedFile,
+} from "@/lib/storage";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = [
@@ -19,6 +21,13 @@ export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "未授权" }, { status: 401 });
+  }
+
+  if (!isUploadStorageReady()) {
+    return NextResponse.json(
+      { error: "文件存储未配置，请联系管理员" },
+      { status: 503 }
+    );
   }
 
   try {
@@ -48,19 +57,12 @@ export async function POST(request: Request) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const ocrText = await processFileOcr(buffer, file.type);
 
-    const uploadDir = path.join(
-      process.cwd(),
-      "public",
-      "uploads",
-      session.user.id
-    );
-    await mkdir(uploadDir, { recursive: true });
-
-    const safeName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-    const filePath = path.join(uploadDir, safeName);
-    await writeFile(filePath, buffer);
-
-    const url = `/uploads/${session.user.id}/${safeName}`;
+    const { url } = await storeUploadedFile({
+      userId: session.user.id,
+      fileName: file.name,
+      mimeType: file.type,
+      buffer,
+    });
 
     const attachment = await prisma.attachment.create({
       data: {
