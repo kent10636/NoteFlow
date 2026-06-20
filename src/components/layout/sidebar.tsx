@@ -10,7 +10,9 @@ import {
   LogOut,
   PenLine,
   Search,
+  Settings,
   Sparkles,
+  Tag,
   Upload,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
@@ -26,7 +28,9 @@ const navItems = [
   { href: "/dashboard/upload", label: "文件上传", icon: Upload },
   { href: "/dashboard/search", label: "语义搜索", icon: Search },
   { href: "/dashboard/graph", label: "知识图谱", icon: GitBranch },
+  { href: "/dashboard/tags", label: "标签管理", icon: Tag },
   { href: "/dashboard/review", label: "每日回顾", icon: CalendarDays },
+  { href: "/dashboard/settings", label: "设置", icon: Settings },
 ];
 
 export function Sidebar() {

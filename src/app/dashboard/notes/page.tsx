@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { NoteCard } from "@/components/notes/note-card";
 import { NoteIoPanel } from "@/components/notes/note-io-panel";
+import { NotesList } from "@/components/notes/notes-list";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default async function NotesPage() {
   const session = await auth();
@@ -42,25 +44,22 @@ export default async function NotesPage() {
         </div>
       </div>
 
-      {notes.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-center">
-          <p className="mb-4 text-lg text-muted-foreground">
-            还没有笔记，创建你的第一条吧！
-          </p>
-          <Link href="/dashboard/notes/new">
-            <Button size="lg">
-              <PenLine className="mr-2 h-4 w-4" />
-              新建笔记
-            </Button>
-          </Link>
-        </div>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {notes.map((note) => (
-            <NoteCard key={note.id} {...note} />
-          ))}
-        </div>
-      )}
+      <Suspense
+        fallback={
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-40 w-full" />
+            ))}
+          </div>
+        }
+      >
+        <NotesList
+          notes={notes.map((note) => ({
+            ...note,
+            updatedAt: note.updatedAt.toISOString(),
+          }))}
+        />
+      </Suspense>
     </div>
   );
 }

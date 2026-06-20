@@ -1,10 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { NoteEditor } from "@/components/notes/note-editor";
+import { TemplatePicker } from "@/components/notes/template-picker";
+import { getNoteTemplate } from "@/lib/note-templates";
 
 export default function NewNotePage() {
   const router = useRouter();
+  const [templateId, setTemplateId] = useState("blank");
+  const template = getNoteTemplate(templateId);
 
   const handleSave = async (data: {
     title: string;
@@ -24,8 +29,20 @@ export default function NewNotePage() {
   };
 
   return (
-    <div className="h-full">
-      <NoteEditor onSave={handleSave} />
+    <div className="flex h-full flex-col">
+      <TemplatePicker
+        selectedId={templateId}
+        onSelect={(t) => setTemplateId(t.id)}
+      />
+      <div className="flex-1">
+        <NoteEditor
+          key={templateId}
+          initialTitle={template.title}
+          initialContent={template.content}
+          initialTags={template.tags}
+          onSave={handleSave}
+        />
+      </div>
     </div>
   );
 }

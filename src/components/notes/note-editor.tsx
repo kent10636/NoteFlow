@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
 import { Brain, Save, Sparkles, Tag, Trash2, Upload } from "lucide-react";
+import { BacklinksPanel } from "@/components/notes/backlinks-panel";
 import { NoteShareButton } from "@/components/notes/note-share-button";
 import { WikiLinkHint } from "@/components/notes/wiki-link-hint";
 import { useWikiLinkAutocomplete } from "@/components/notes/wiki-link-autocomplete";
@@ -51,6 +52,7 @@ export function NoteEditor({
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState<string | null>(null);
   const [showUpload, setShowUpload] = useState(false);
+  const [backlinksRefreshKey, setBacklinksRefreshKey] = useState(0);
 
   const { textareaProps: wikiLinkTextareaProps, AutocompleteList } =
     useWikiLinkAutocomplete({
@@ -66,6 +68,7 @@ export function NoteEditor({
     setSaving(true);
     try {
       await onSave?.({ title, content, tags });
+      setBacklinksRefreshKey((k) => k + 1);
       toast.success("笔记已保存");
     } catch {
       toast.error("保存失败");
@@ -210,6 +213,7 @@ export function NoteEditor({
       )}
 
       <WikiLinkHint />
+      <BacklinksPanel noteId={noteId} refreshKey={backlinksRefreshKey} />
       {AutocompleteList}
 
       <div className="flex-1 overflow-auto p-4" data-color-mode="light">

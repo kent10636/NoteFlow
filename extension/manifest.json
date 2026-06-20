@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "NoteFlow Clipper",
+  "version": "1.0.0",
+  "description": "将网页内容剪藏到 NoteFlow",
+  "permissions": ["activeTab", "storage"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "剪藏到 NoteFlow"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icon.svg",
+    "48": "icon.svg",
+    "128": "icon.svg"
+  }
+}
